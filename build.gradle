@@ -1,0 +1,63 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '2.7.12'
+	id 'io.spring.dependency-management' version '1.1.4'
+	id 'org.hidetake.ssh' version '2.11.2'
+}
+
+group = 'tech.sergeyev'
+version = ''
+
+java {
+	sourceCompatibility = '11'
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-amqp'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'redis.clients:jedis'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.amqp:spring-rabbit-test'
+
+	implementation 'org.telegram:telegrambots-spring-boot-starter:6.9.7.1'
+
+	implementation 'com.jcraft:jsch:0.1.55'
+	implementation 'com.vdurmont:emoji-java:5.1.1'
+
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+remotes {
+	webServer {
+		host = '192.168.150.120'
+		user = 'ssergeev'
+		identity = file('C:/Users/Svyatoslav/.ssh/id_rsa')
+	}
+}
+
+tasks.register('deploy') {
+	doLast {
+		ssh.run {
+			session(remotes.webServer) {
+				put from: 'D:/Projects/heartbeat-bot/build/libs/bot.jar', into: '/home/ssergeev'
+//				execute 'sudo systemctl restart bot'
+			}
+		}
+	}
+}
