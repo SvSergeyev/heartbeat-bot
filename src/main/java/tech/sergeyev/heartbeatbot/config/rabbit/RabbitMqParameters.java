@@ -10,14 +10,9 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 public class RabbitMqParameters {
-//    @Value("${rabbitmq.username}")
     private String username;
-//    @Value("${rabbitmq.password}")
     private String password;
-//    @Value("${rabbitmq.host}")
     private String host;
-//    @Value("${rabbitmq.virtualhost}")
     private String virtualHost;
-//    @Value("${rabbitmq.replyTimeout}")
     private long replyTimeout;
 }

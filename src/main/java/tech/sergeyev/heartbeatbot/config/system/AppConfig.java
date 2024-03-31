@@ -8,7 +8,7 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
 import tech.sergeyev.heartbeatbot.config.bot.BotParameters;
 import tech.sergeyev.heartbeatbot.service.bot.BotService;
 import tech.sergeyev.heartbeatbot.service.subscription.SubscriptionRestoreService;
-import tech.sergeyev.heartbeatbot.service.update.common.UpdatesFacade;
+import tech.sergeyev.heartbeatbot.service.update.UpdatesFacade;
 
 import java.nio.charset.StandardCharsets;
 
@@ -27,8 +27,8 @@ public class AppConfig {
     public @Bean BotService botService(UpdatesFacade facade,
                                        SubscriptionRestoreService subscriptionRestoreService) {
         return new BotService(
-                botParameters.getToken(),
                 botParameters.getName(),
+                botParameters.getToken(),
                 facade,
                 subscriptionRestoreService);
     }

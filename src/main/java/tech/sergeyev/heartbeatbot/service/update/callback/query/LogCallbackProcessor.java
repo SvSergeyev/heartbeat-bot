@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import tech.sergeyev.heartbeatbot.exception.ServiceNameConversionException;
 import tech.sergeyev.heartbeatbot.service.update.callback.CallbackType;
+import tech.sergeyev.heartbeatbot.service.update.callback.CallbackTypeProcessor;
 import tech.sergeyev.heartbeatbot.service.util.LogFilesCollector;
 import tech.sergeyev.heartbeatbot.service.util.Services;
 
@@ -19,10 +20,10 @@ import static tech.sergeyev.heartbeatbot.service.update.callback.CallbackHandler
 @RequiredArgsConstructor
 @Slf4j
 public class LogCallbackProcessor implements CallbackTypeProcessor {
-    private final AbsSender sender;
+//    private final AbsSender sender;
 
     @Override
-    public void process(CallbackQuery query) throws TelegramApiException {
+    public void process(CallbackQuery query, AbsSender sender) throws TelegramApiException {
         var chatId = query.getMessage().getChatId();
         var reply = new SendDocument();
         reply.setChatId(chatId);

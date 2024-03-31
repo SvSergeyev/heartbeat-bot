@@ -6,6 +6,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import tech.sergeyev.heartbeatbot.dto.DevStageStatus;
 import tech.sergeyev.heartbeatbot.dto.ReleaseInfo;
 import tech.sergeyev.heartbeatbot.exception.ReleaseInfoParsingException;
@@ -31,7 +32,7 @@ public class RabbitMqUpdatesListener {
     private final SubscriptionManager subscriptionManager;
 
     @RabbitHandler
-    public void processCoreQueue(DevStageStatus message) {
+    public void processCoreQueue(DevStageStatus message) throws TelegramApiException {
         var chatIds = subscriptionManager.findAllByUrl(message.getUrl()).stream()
                 .map(Subscription::getChatId)
                 .collect(Collectors.toList());
@@ -45,7 +46,7 @@ public class RabbitMqUpdatesListener {
                 reply.setReplyMarkup(ReplyMarkupCreator.getReleaseInfoButton(message.getUrl()));
             }
             reply.setChatId(chatId);
-            bot.offerToQueue(reply);
+            bot.execute(reply);
         }
     }
 

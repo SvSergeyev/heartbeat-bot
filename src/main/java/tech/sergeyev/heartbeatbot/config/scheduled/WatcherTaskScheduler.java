@@ -8,7 +8,7 @@ import tech.sergeyev.heartbeatbot.service.watcher.Watcher;
 @Slf4j
 public class WatcherTaskScheduler extends ThreadPoolTaskScheduler {
     @Value("${scheduler.fixed-rate}")
-    private int fixedRateMs = 3000;
+    private final int fixedRateMs = 3000;
 
 
     public void scheduleAtFixedRate(Watcher task) {

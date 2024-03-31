@@ -1,19 +1,18 @@
 package tech.sergeyev.heartbeatbot.service.update.callback;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import tech.sergeyev.heartbeatbot.exception.CallbackTypeConversionError;
-import tech.sergeyev.heartbeatbot.service.update.callback.query.CallbackTypeProcessor;
 
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class CallbackHandler {
     public static final String CALLBACK_DATA_SEPARATOR = "::";
     private final Map<CallbackType, CallbackTypeProcessor> processors = new EnumMap<>(CallbackType.class);
@@ -22,14 +21,13 @@ public class CallbackHandler {
         processors.forEach(processor -> this.processors.put(processor.getType(), processor));
     }
 
-    public void handleCallbackQuery(CallbackQuery query) {
+    public void handleCallbackQuery(CallbackQuery query, AbsSender sender) {
         try {
             var type = extractTypeFromQuery(query);
-            processors.getOrDefault(type, processors.get(CallbackType.UNKNOWN)).process(query);
-        } catch (CallbackTypeConversionError e) {
-//            return new SendMessage(query.getMessage().getChatId().toString(), e.getMessage());
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
+            processors.getOrDefault(type, processors.get(CallbackType.UNKNOWN)).process(query, sender);
+        } catch (CallbackTypeConversionError | TelegramApiException e) {
+            log.error("Internal error when processing callback: {}", e.getMessage());
+            log.error("Error: ", e);
         }
     }
 

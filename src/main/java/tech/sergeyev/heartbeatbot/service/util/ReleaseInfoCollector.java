@@ -9,7 +9,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.List;
 public class ReleaseInfoCollector {
     private static final String REQUEST_METHOD = "GET";
     private static final String URL_TEMPLATE = "http://%s/release_info.txt";
+    private static final String HEALTHCHECK_URL_TEMPLATE = "http://%s/";
     private static final int BRANCH_INDEX = 3;
     private static final int COMMIT_INDEX = 4;
     private static final int TIME_INDEX = 5;
@@ -28,12 +31,10 @@ public class ReleaseInfoCollector {
 
     public List<ReleaseInfo> collectAll(String url) throws ReleaseInfoParsingException {
         try {
-            var connection = (HttpURLConnection) new URL(getFormattedUrl(url)).openConnection();
-            connection.setRequestMethod(REQUEST_METHOD);
-            var response = connection.getInputStream();
+//            var response = getReleaseInfo(url);
             var info = new ArrayList<ReleaseInfo>();
             for (var service : Services.values()) {
-                info.add(parseOne(response, service));
+                info.add(parseOne(getReleaseInfo(url), service));
             }
             return info;
         } catch (IOException e) {
@@ -45,9 +46,7 @@ public class ReleaseInfoCollector {
 
     public ReleaseInfo collectOne(String url, Services name) throws ReleaseInfoParsingException {
         try {
-            var connection = (HttpURLConnection) new URL(getFormattedUrl(url)).openConnection();
-            connection.setRequestMethod(REQUEST_METHOD);
-            var response = connection.getInputStream();
+            var response = getReleaseInfo(url);
             return parseOne(response, name);
         } catch (IOException e) {
             log.error("Cannot connect to {}", url);
@@ -58,6 +57,10 @@ public class ReleaseInfoCollector {
 
     private String getFormattedUrl(String url) {
         return String.format(URL_TEMPLATE, url);
+    }
+
+    private String getHealthcheckUrl(String url) {
+        return String.format(HEALTHCHECK_URL_TEMPLATE, url);
     }
 
     private ReleaseInfo parseOne(InputStream content, Services serviceName)
@@ -91,8 +94,29 @@ public class ReleaseInfoCollector {
             }
             body = sb.toString();
         } catch (IOException e) {
+            log.error("Error: ", e);
             throw new ReleaseInfoParsingException("Cannot read response");
         }
         return body.split(serviceName.getNameInReleaseInfo())[1];
+    }
+
+    private InputStream getReleaseInfo(String url) throws IOException {
+        if (!isServiceActive(url)) {
+            return null;
+        }
+        var connection = (HttpURLConnection) new URL(getFormattedUrl(url)).openConnection();
+        connection.setRequestMethod(REQUEST_METHOD);
+        return connection.getInputStream();
+    }
+
+    private boolean isServiceActive(String url) {
+        try {
+            var connection = (HttpURLConnection) new URL(getHealthcheckUrl(url)).openConnection();
+            connection.setRequestMethod(REQUEST_METHOD);
+            connection.getResponseCode();
+            return Boolean.TRUE;
+        } catch (IOException e) {
+            return Boolean.FALSE;
+        }
     }
 }

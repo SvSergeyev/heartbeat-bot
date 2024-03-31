@@ -1,9 +1,11 @@
-package tech.sergeyev.heartbeatbot.service.update.common;
+package tech.sergeyev.heartbeatbot.service.update;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.bots.AbsSender;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import tech.sergeyev.heartbeatbot.exception.UpdateValidationException;
 import tech.sergeyev.heartbeatbot.service.update.callback.CallbackHandler;
 import tech.sergeyev.heartbeatbot.service.update.message.MessageHandler;
@@ -17,15 +19,17 @@ public class UpdatesFacadeService implements UpdatesFacade {
     private final CallbackHandler callbackHandler;
 
     @Override
-    public void handle(Update update) {
+    public void handle(Update update, AbsSender sender) {
         try {
             if (update.hasCallbackQuery()) {
-                callbackHandler.handleCallbackQuery(update.getCallbackQuery());
+                callbackHandler.handleCallbackQuery(update.getCallbackQuery(), sender);
+            } else {
+                UpdateValidator.checkHasValidMessage(update);
+                messageHandler.handleInputMessage(update.getMessage(), sender);
             }
-            UpdateValidator.checkHasValidMessage(update);
-            messageHandler.handleInputMessage(update.getMessage());
-        } catch (UpdateValidationException e) {
-            log.error("Cannot process update");
+        } catch (UpdateValidationException | TelegramApiException e) {
+            log.error("Internal error when processing message: {}", e.getMessage());
+            log.error("Error: ", e);
         }
     }
 }

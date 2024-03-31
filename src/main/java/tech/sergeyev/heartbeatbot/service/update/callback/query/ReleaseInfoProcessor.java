@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import tech.sergeyev.heartbeatbot.dto.ReleaseInfo;
 import tech.sergeyev.heartbeatbot.exception.ReleaseInfoParsingException;
 import tech.sergeyev.heartbeatbot.service.update.callback.CallbackType;
+import tech.sergeyev.heartbeatbot.service.update.callback.CallbackTypeProcessor;
 import tech.sergeyev.heartbeatbot.service.util.Messages;
 import tech.sergeyev.heartbeatbot.service.util.ReleaseInfoCollector;
 
@@ -22,21 +23,26 @@ import static tech.sergeyev.heartbeatbot.service.update.callback.CallbackHandler
 @Slf4j
 public class ReleaseInfoProcessor implements CallbackTypeProcessor {
     private final Messages messages;
-    private final AbsSender sender;
+//    private final AbsSender sender;
 
     @Override
-    public void process(CallbackQuery query) throws TelegramApiException {
+    public void process(CallbackQuery query, AbsSender sender) throws TelegramApiException {
         var chatId = query.getMessage().getChatId();
         var url = query.getData().split(CALLBACK_DATA_SEPARATOR)[1];
         var reply = new SendMessage();
+        reply.setChatId(String.valueOf(chatId));
         try {
             var infoList = ReleaseInfoCollector.collectAll(url);
-            reply.setText(getFormattedMessage(infoList));
+            if (infoList == null || infoList.isEmpty()) {
+                reply.setText("Service unavailable");
+                sender.execute(reply);
+            } else {
+                reply.setText(getFormattedMessage(infoList));
+            }
         } catch (ReleaseInfoParsingException e) {
             log.error("Error: ", e);
             reply.setText(messages.getMessage(Messages.INTERNAL_ERROR, e.getMessage()));
         }
-        reply.setChatId(String.valueOf(chatId));
         sender.execute(reply);
     }
 

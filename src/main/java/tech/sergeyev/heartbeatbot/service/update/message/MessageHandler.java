@@ -2,8 +2,9 @@ package tech.sergeyev.heartbeatbot.service.update.message;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.bots.AbsSender;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import tech.sergeyev.heartbeatbot.service.util.IpResolver;
 
 import java.util.HashMap;
@@ -22,10 +23,11 @@ public class MessageHandler {
         commandHandlers.forEach(handler -> handlers.put(handler.getName(), handler));
     }
 
-    public SendMessage handleInputMessage(Message message) {
+    public void handleInputMessage(Message message, AbsSender sender) throws TelegramApiException {
         if (IpResolver.isIpAddress(message.getText())) {
-            return handlers.get(IP_HANDLER_NAME).handle(message);
+            handlers.get(IP_HANDLER_NAME).handle(message, sender);
+        } else {
+            handlers.getOrDefault(message.getText(), defaultHandler).handle(message, sender);
         }
-        return handlers.getOrDefault(message.getText(), defaultHandler).handle(message);
     }
 }

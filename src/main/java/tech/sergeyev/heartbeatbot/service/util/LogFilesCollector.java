@@ -6,11 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @UtilityClass
 @Slf4j
@@ -31,36 +30,29 @@ public class LogFilesCollector {
 
     public File getLogFilesAsZip(String url, Services service) {
         var files = getAllLogFiles(url, service.getLogFilesPath());
-
-        final FileOutputStream fos = new FileOutputStream(Paths.get(file1).getParent().toAbsolutePath() + "/compressed.zip");
-        ZipOutputStream zipOut = new ZipOutputStream(fos);
-
-        for (String srcFile : srcFiles) {
-            File fileToZip = new File(srcFile);
-            FileInputStream fis = new FileInputStream(fileToZip);
-            ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
-            zipOut.putNextEntry(zipEntry);
-
-            byte[] bytes = new byte[1024];
-            int length;
-            while((length = fis.read(bytes)) >= 0) {
-                zipOut.write(bytes, 0, length);
+        var tempDir = System.getProperty("java.io.tmpdir");
+//        final FileOutputStream fos = new FileOutputStream(Paths.get(file1).getParent().toAbsolutePath() + "/compressed.zip");
+//        var zipOut = new ZipOutputStream(fos);
+        var outFileDir = tempDir + File.separator + "logs.zip";
+        try (var fos = new FileOutputStream(outFileDir);
+             var zipOut = new ZipOutputStream(fos)) {
+            for (var logFile : files) {
+                try (var fis = new FileInputStream(logFile)) {
+                    var zipEntry = new ZipEntry(logFile.getName());
+                    zipOut.putNextEntry(zipEntry);
+                    byte[] bytes = new byte[1024];
+                    int length;
+                    while ((length = fis.read(bytes)) >= 0) {
+                        zipOut.write(bytes, 0, length);
+                    }
+                } catch (IOException e) {
+                    log.error("Error: ", e);
+                }
             }
-            fis.close();
+            return new File(outFileDir);
+        } catch (IOException e) {
+            log.error("Error: ", e);
         }
-
-        zipOut.close();
-        fos.close();
-
-        try(var fos = new FileOutputStream(Paths.get()))
-
-//        for (var file : files) {
-//            try {
-//                Files.deleteIfExists(file.toPath());
-//            } catch (IOException e) {
-//                log.error("Cannot delete file '{}'", file.getName());
-//            }
-//        }
         return null;
     }
 
@@ -107,6 +99,6 @@ public class LogFilesCollector {
                 jschSession.disconnect();
             }
         }
-        return Collections.emptySet();
+        return files;
     }
 }

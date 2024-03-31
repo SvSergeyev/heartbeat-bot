@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import tech.sergeyev.heartbeatbot.exception.SubscriptionException;
 import tech.sergeyev.heartbeatbot.service.subscription.SubscriptionManager;
 import tech.sergeyev.heartbeatbot.service.update.callback.CallbackType;
+import tech.sergeyev.heartbeatbot.service.update.callback.CallbackTypeProcessor;
 import tech.sergeyev.heartbeatbot.service.util.IpResolver;
 import tech.sergeyev.heartbeatbot.service.util.Messages;
 
@@ -21,10 +22,10 @@ import static tech.sergeyev.heartbeatbot.service.update.callback.CallbackHandler
 public class SubscriptionCallbackProcessor implements CallbackTypeProcessor {
     private final SubscriptionManager subscriptionManager;
     private final Messages messageService;
-    private final AbsSender sender;
+//    private final AbsSender sender;
 
     @Override
-    public void process(CallbackQuery query) throws TelegramApiException {
+    public void process(CallbackQuery query, AbsSender sender) throws TelegramApiException {
         var chatId = query.getMessage().getChatId();
         var url = query.getData().split(CALLBACK_DATA_SEPARATOR)[1];
         var reply = new SendMessage();

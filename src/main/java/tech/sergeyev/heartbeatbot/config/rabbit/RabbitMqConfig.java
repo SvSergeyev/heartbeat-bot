@@ -23,17 +23,6 @@ public class RabbitMqConfig {
     public static final String CORE_QUEUE_NAME = "core_status_queue";
     private final RabbitMqParameters rabbitMqParameters;
 
-//    @Value("${rabbitmq.username}")
-//    private String username;
-//    @Value("${rabbitmq.password}")
-//    private String password;
-//    @Value("${rabbitmq.host}")
-//    private String host;
-//    @Value("${rabbitmq.virtualhost}")
-//    private String virtualHost;
-//    @Value("${rabbitmq.replyTimeout}")
-//    private long replyTimeout;
-
     @Bean
     public Queue queue() {
         return new Queue(CORE_QUEUE_NAME);
@@ -41,7 +30,7 @@ public class RabbitMqConfig {
 
     @Bean
     public ConnectionFactory rabbitMqConnectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+        var connectionFactory = new CachingConnectionFactory();
         connectionFactory.setVirtualHost(rabbitMqParameters.getVirtualHost());
         connectionFactory.setHost(rabbitMqParameters.getHost());
         connectionFactory.setUsername(rabbitMqParameters.getUsername());
